@@ -11,7 +11,7 @@ const Web3 = require('web3')
 const DEFAULT_PROVIDER = 'http://localhost:8545'
 const DEPLOY_BALANCE = 0.42e18.toString()
 
-export relayHubAddress = gsnHubDeploy.contract.address
+export const relayHubAddress = gsnHubDeploy.contract.address
 
 // start a relay
 // account - either account number (0-10) or address
@@ -84,14 +84,14 @@ export async function deployRelayHub (web3, fundingAccount) {
 let ls
 
 //bring up a relay.
-function launchRelay ({ verbose }) {
+function launchRelay ({ verbose, gasPricePercent=-99 }) {
   return new Promise((resolve, reject) => {
     let lastrest = {}
     let output = ''
     const folder = __dirname
     const relayExe = folder + '/../bin/RelayHttpServer.' + process.platform
     const workdir = folder + '/../build/tmp'
-    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-GasPricePercent', '1'], { stdio: 'pipe' })
+    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-GasPricePercent', gasPricePercent], { stdio: 'pipe' })
     ls.stderr.on('data', (data) => {
       const text = data.toString()
       output = output + text
