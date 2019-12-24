@@ -1,6 +1,6 @@
 {
   "name": "localgsn",
-  "version": "1.0.0beta-0",
+  "version": "1.0.0-beta-0.0",
   "main": "./js/localGsn.js",
   "repository": "git@github.com:tabookey/localgsn.git",
   "author": "Dror Tirosh <dror@tabookey.com>",
@@ -9,7 +9,7 @@
     "esm": "^3.2.25",
     "tabookey-gasless": "^0.4.5"
   },
-  "scripts":{
+  "scripts": {
     "pub": "yarn publish --prerelease --tag beta"
   }
 }
