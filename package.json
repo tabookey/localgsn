@@ -1,0 +1,12 @@
+{
+  "name": "localgsn",
+  "version": "1.0.0",
+  "main": "./js/localGsn.js",
+  "repository": "git@github.com:tabookey/localgsn.git",
+  "author": "Dror Tirosh <dror@tabookey.com>",
+  "license": "MIT",
+  "dependencies": {
+    "esm": "^3.2.25",
+    "tabookey-gasless": "^0.4.5"
+  }
+}
