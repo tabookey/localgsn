@@ -7,7 +7,9 @@ const { spawn } = require('child_process')
 const IRelayHub = require('tabookey-gasless/src/js/relayclient/IRelayHub')
 const gsnHubDeploy = require('./gsn-hub-deploy')
 const Web3 = require('web3')
+const axios = require('axios')
 
+const RELAY_URL='http://localhost:8090'
 const DEFAULT_PROVIDER = 'http://localhost:8545'
 const DEPLOY_BALANCE = 0.42e18.toString()
 
@@ -49,10 +51,28 @@ export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER,
     console.log('=== staking: ')
     await hub.methods.stake(relayAddr, 24 * 3600 * 7).send({ value: 1e18 })
   }
+  console.log('=== wait for relay Ready: ')
+  await waitForRelayReady()
   return relayAddr
 }
 
-// stop a previouslty-started gsn relay
+function waitForRelayReady() {
+  return new Promise((resolve,reject)=>{
+    let counter=0
+    const callback=()=>{
+      axios.get(RELAY_URL+'/getaddr').then(res=>{
+        if ( res.data && res.data.Ready ) {
+		resolve(res.data)
+	} else 
+        if ( ++counter>10 ) reject("timed-out waiting for relay: "+res.error||res.data ) 
+	else setTimeout(callback,300)
+      }).catch(err=>reject(err))
+    }
+    callback()
+  })
+}
+
+// stop a previously-started gsn relay
 export function stopGsnRelay () {
   stopRelay()
 }
