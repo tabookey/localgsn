@@ -7,9 +7,11 @@
   "license": "MIT",
   "dependencies": {
     "esm": "^3.2.25",
+    "run-with-ganache": "^0.1.1",
     "tabookey-gasless": "^0.4.5"
   },
   "scripts": {
-    "pub": "yarn publish --prerelease --tag beta"
+    "pub": "yarn publish --prerelease --tag beta",
+    "test": "npx run-with-ganache 'node -r esm js/gsncli.js'"
   }
 }
