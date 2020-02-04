@@ -1,6 +1,6 @@
 {
   "name": "localgsn",
-  "version": "1.0.0-beta-0.0",
+  "version": "1.0.1",
   "main": "./js/localGsn.js",
   "repository": "git@github.com:tabookey/localgsn.git",
   "author": "Dror Tirosh <dror@tabookey.com>",
