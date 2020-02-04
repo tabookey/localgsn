@@ -19,7 +19,7 @@ export const relayHubAddress = gsnHubDeploy.contract.address
 // account - either account number (0-10) or address
 // verbose - dump relay output to console.
 //NOTE: the relay is on hub, so it can be started again.
-export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER, verbose } = {}) {
+export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER, relayUrl = RELAY_URL, verbose } = {}) {
   if (typeof provider == 'string') {
     provider = new Web3.providers.HttpProvider(provider)
   }
@@ -33,7 +33,7 @@ export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER,
   //deploy hub if needed:
   await deployRelayHub(web3, account)
   const hub = new web3.eth.Contract(IRelayHub, gsnHubDeploy.contract.address, { from: account })
-  const relayAddr = await launchRelay({ verbose })
+  const relayAddr = await launchRelay({ relayUrl, verbose })
 
   // fund relay:
   const bal = await web3.eth.getBalance(web3.utils.toChecksumAddress(relayAddr))
@@ -51,16 +51,16 @@ export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER,
     console.log('=== staking: ')
     await hub.methods.stake(relayAddr, 24 * 3600 * 7).send({ value: 1e18 })
   }
-  console.log('=== wait for relay Ready: ')
-  await waitForRelayReady()
+  console.log('=== wait for relay Ready: ', relayUrl)
+  await waitForRelayReady(relayUrl)
   return relayAddr
 }
 
-function waitForRelayReady() {
+function waitForRelayReady(relayUrl) {
   return new Promise((resolve,reject)=>{
     let counter=0
     const callback=()=>{
-      axios.get(RELAY_URL+'/getaddr').then(res=>{
+      axios.get(relayUrl+'/getaddr').then(res=>{
         if ( res.data && res.data.Ready ) {
 		resolve(res.data)
 	} else 
@@ -104,14 +104,14 @@ export async function deployRelayHub (web3, fundingAccount) {
 let ls
 
 //bring up a relay.
-function launchRelay ({ verbose, gasPricePercent=-99 }) {
+function launchRelay ({ verbose, gasPricePercent=-99, relayUrl = RELAY_URL }) {
   return new Promise((resolve, reject) => {
     let lastrest = {}
     let output = ''
     const folder = __dirname
     const relayExe = folder + '/../bin/RelayHttpServer.' + process.platform
     const workdir = folder + '/../build/tmp'
-    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-GasPricePercent', gasPricePercent], { stdio: 'pipe' })
+    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-Url', relayUrl, '-GasPricePercent', gasPricePercent], { stdio: 'pipe' })
     ls.stderr.on('data', (data) => {
       const text = data.toString()
       output = output + text
