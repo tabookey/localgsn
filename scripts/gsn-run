@@ -1,7 +1,12 @@
-#!/usr/bin/env node -r esm
-const { startGsnRelay, stopGsnRelay, relayHubAddress } = require( '../js/localgsn' )
+#!/usr/bin/env node
+const { startGsnRelay, stopGsnRelay, relayHubAddress } = require( 'localgsn' )
 
-startGsnRelay({relayUrl: process.env.RELAY_URL}).then(addr=>console.log( "relay is ready. addr=",addr))
+relayUrl= process.env.RELAY_URL
+localPort = process.env.LOCAL_PORT
+verbose = process.env.VERBOSE
+
+console.log( {relayUrl, localPort, verbose} )
+startGsnRelay({relayUrl,localPort, verbose}).then(addr=>console.log( "relay is ready. addr=",addr))
 	.catch( err=>{ console.log(err); process.exit() })
 
 process.on('exit', stopGsnRelay )

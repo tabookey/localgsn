@@ -19,7 +19,7 @@ export const relayHubAddress = gsnHubDeploy.contract.address
 // account - either account number (0-10) or address
 // verbose - dump relay output to console.
 //NOTE: the relay is on hub, so it can be started again.
-export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER, relayUrl = RELAY_URL, verbose } = {}) {
+export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER, localPort, relayUrl = RELAY_URL, verbose } = {}) {
   if (typeof provider == 'string') {
     provider = new Web3.providers.HttpProvider(provider)
   }
@@ -33,7 +33,7 @@ export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER,
   //deploy hub if needed:
   await deployRelayHub(web3, account)
   const hub = new web3.eth.Contract(IRelayHub, gsnHubDeploy.contract.address, { from: account })
-  const relayAddr = await launchRelay({ relayUrl, verbose })
+  const relayAddr = await launchRelay({ relayUrl, localPort, verbose })
 
   // fund relay:
   const bal = await web3.eth.getBalance(web3.utils.toChecksumAddress(relayAddr))
@@ -66,7 +66,7 @@ function waitForRelayReady(relayUrl) {
 	} else 
         if ( ++counter>10 ) reject("timed-out waiting for relay: "+res.error||res.data ) 
 	else setTimeout(callback,300)
-      }).catch(err=>reject(err))
+      }).catch(err=>{}) //ignore errors.
     }
     callback()
   })
@@ -104,14 +104,16 @@ export async function deployRelayHub (web3, fundingAccount) {
 let ls
 
 //bring up a relay.
-function launchRelay ({ verbose, gasPricePercent=-99, relayUrl = RELAY_URL }) {
+function launchRelay ({ verbose, gasPricePercent=-99, localPort, relayUrl = RELAY_URL }) {
   return new Promise((resolve, reject) => {
     let lastrest = {}
     let output = ''
     const folder = __dirname
     const relayExe = folder + '/../bin/RelayHttpServer.' + process.platform
     const workdir = folder + '/../build/tmp'
-    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-Url', relayUrl, '-GasPricePercent', gasPricePercent], { stdio: 'pipe' })
+    const port = localPort || relayUrl.match(/:(\d+)/)[1]
+	console.log( "port=", port, "localPort=", localPort )
+    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-Port', port, '-Url', relayUrl, '-GasPricePercent', gasPricePercent], { stdio: 'pipe' })
     ls.stderr.on('data', (data) => {
       const text = data.toString()
       output = output + text
