@@ -11,7 +11,11 @@
     "tabookey-gasless": "^0.4.5"
   },
   "scripts": {
+    "gsn-run": "./scripts/gsn-run",
     "pub": "yarn publish --prerelease --tag beta",
     "test": "npx run-with-ganache 'node -r esm js/gsncli.js'"
+  },
+  "bin": {
+    "gsn-run": "./scripts/gsn-run"
   }
 }

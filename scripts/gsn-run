@@ -1,0 +1,10 @@
+#!/usr/bin/env node -r esm
+const { startGsnRelay, stopGsnRelay, relayHubAddress } = require( '../js/localgsn' )
+
+startGsnRelay({relayUrl: process.env.RELAY_URL}).then(addr=>console.log( "relay is ready. addr=",addr))
+	.catch( err=>{ console.log(err); process.exit() })
+
+process.on('exit', stopGsnRelay )
+
+var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
+
