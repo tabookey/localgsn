@@ -13,14 +13,16 @@ const RELAY_URL='http://localhost:8090'
 const DEFAULT_PROVIDER = 'http://localhost:8545'
 const DEPLOY_BALANCE = 0.42e18.toString()
 
-export const relayHubAddress = gsnHubDeploy.contract.address
+const relayHubAddress = gsnHubDeploy.contract.address
 
 // start a relay
 // account - either account number (0-10) or address
 // verbose - dump relay output to console.
 //NOTE: the relay is on hub, so it can be started again.
-export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER, localPort, relayUrl = RELAY_URL, verbose } = {}) {
+async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER, localPort, relayUrl = RELAY_URL, verbose } = {}) {
+  let nodeUrl
   if (typeof provider == 'string') {
+    nodeUrl = provider
     provider = new Web3.providers.HttpProvider(provider)
   }
   const web3 = new Web3(provider)
@@ -33,7 +35,7 @@ export async function startGsnRelay ({ account = 0, provider = DEFAULT_PROVIDER,
   //deploy hub if needed:
   await deployRelayHub(web3, account)
   const hub = new web3.eth.Contract(IRelayHub, gsnHubDeploy.contract.address, { from: account })
-  const relayAddr = await launchRelay({ relayUrl, localPort, verbose })
+  const relayAddr = await launchRelay({ relayUrl, localPort, verbose, nodeUrl })
 
   // fund relay:
   const bal = await web3.eth.getBalance(web3.utils.toChecksumAddress(relayAddr))
@@ -73,11 +75,11 @@ function waitForRelayReady(relayUrl) {
 }
 
 // stop a previously-started gsn relay
-export function stopGsnRelay () {
+function stopGsnRelay () {
   stopRelay()
 }
 
-export async function deployRelayHub (web3, fundingAccount) {
+async function deployRelayHub (web3, fundingAccount) {
   let code = await web3.eth.getCode(gsnHubDeploy.contract.address)
   if (code.length > 3) {
     // already deployed
@@ -104,7 +106,7 @@ export async function deployRelayHub (web3, fundingAccount) {
 let ls
 
 //bring up a relay.
-function launchRelay ({ verbose, gasPricePercent=-99, localPort, relayUrl = RELAY_URL }) {
+function launchRelay ({ verbose, gasPricePercent=-99, localPort, relayUrl = RELAY_URL, nodeUrl }) {
   return new Promise((resolve, reject) => {
     let lastrest = {}
     let output = ''
@@ -112,8 +114,15 @@ function launchRelay ({ verbose, gasPricePercent=-99, localPort, relayUrl = RELA
     const relayExe = folder + '/../bin/RelayHttpServer.' + process.platform
     const workdir = folder + '/../build/tmp'
     const port = localPort || relayUrl.match(/:(\d+)/)[1]
-	console.log( "port=", port, "localPort=", localPort )
-    ls = spawn(relayExe, ['-DevMode', '-Workdir', workdir, '-Port', port, '-Url', relayUrl, '-GasPricePercent', gasPricePercent], { stdio: 'pipe' })
+	
+    relayParams = ['-DevMode', '-Workdir', workdir, '-Port', port, '-Url', relayUrl, '-GasPricePercent', gasPricePercent]
+    if ( nodeUrl ) {
+      relayParams.push( '-EthereumNodeUrl', nodeUrl)
+    }
+    if ( verbose ) {
+      console.log(relayExe, relayParams.join(' '))
+    }
+    ls = spawn(relayExe, relayParams, { stdio: 'pipe' })
     ls.stderr.on('data', (data) => {
       const text = data.toString()
       output = output + text
@@ -147,4 +156,4 @@ function stopRelay () {
   }
 }
 
-module.exports = { startGsnRelay, stopGsnRelay, deployRelayHub }
+module.exports = { startGsnRelay, stopGsnRelay, deployRelayHub, relayHubAddress }

@@ -6,7 +6,6 @@
   "author": "Dror Tirosh <dror@tabookey.com>",
   "license": "MIT",
   "dependencies": {
-    "esm": "^3.2.25",
     "run-with-ganache": "^0.1.1",
     "tabookey-gasless": "^0.4.5"
   },
